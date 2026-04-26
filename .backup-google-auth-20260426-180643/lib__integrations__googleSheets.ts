@@ -1,4 +1,3 @@
-﻿import { getGoogleSheetsClient } from "../google-auth";
 import fs from "node:fs";
 import path from "node:path";
 import { google } from "googleapis";
@@ -41,8 +40,8 @@ const STATUS_INDEX = Number(process.env.SHEETS_STATUS_INDEX ?? 8);
 const PRICE_INDEX = Number(process.env.SHEETS_PRICE_INDEX ?? 9);
 
 /**
- * Google Sheets kotasÄ±nÄ± korumak iÃ§in cache sÃ¼relerini uzun tutuyoruz.
- * Dev ortamÄ±nda hot reload sÄ±k Ã§alÄ±ÅŸtÄ±ÄŸÄ± iÃ§in memory cache tek baÅŸÄ±na yetmeyebilir.
+ * Google Sheets kotasını korumak için cache sürelerini uzun tutuyoruz.
+ * Dev ortamında hot reload sık çalıştığı için memory cache tek başına yetmeyebilir.
  */
 const CACHE_TTL_MS = Number(process.env.SHEETS_CACHE_TTL_MS ?? 15 * 60_000);
 const STALE_CACHE_TTL_MS = Number(process.env.SHEETS_STALE_CACHE_TTL_MS ?? 6 * 60 * 60_000);
@@ -91,8 +90,8 @@ function formatIsoLocal(date: Date) {
 function parseGoogleSerialDate(value: number) {
   /**
    * Google Sheets / Excel serial date epoch: 1899-12-30.
-   * Saat farkÄ± kaymasÄ± olmamasÄ± iÃ§in UTC kullanÄ±p local ISO'a Ã§evirmiyoruz,
-   * doÄŸrudan UTC parÃ§alarÄ±ndan yyyy-mm-dd Ã¼retiyoruz.
+   * Saat farkı kayması olmaması için UTC kullanıp local ISO'a çevirmiyoruz,
+   * doğrudan UTC parçalarından yyyy-mm-dd üretiyoruz.
    */
   const epoch = Date.UTC(1899, 11, 30);
   const date = new Date(epoch + value * 86_400_000);
@@ -140,7 +139,7 @@ function parsePrice(value: unknown): number {
   const raw = String(value ?? "").trim();
   if (!raw) return 0;
 
-  const compact = raw.replace(/\s/g, "").replace(/[â‚ºâ‚¼â‚¬$]/g, "");
+  const compact = raw.replace(/\s/g, "").replace(/[₺₼€$]/g, "");
   let normalized = compact;
 
   if (compact.includes(",") && compact.includes(".")) {
@@ -157,8 +156,8 @@ function parsePrice(value: unknown): number {
     normalized = compact.replace(/,/g, "");
 
     /**
-     * 9.000 gibi TÃ¼rkÃ§e binlik ayracÄ± iÃ§in nokta tamamen kaldÄ±rÄ±lÄ±r.
-     * 9000.50 gibi ondalÄ±klÄ± veri kullanÄ±yorsanÄ±z Google Sheet'i sayÄ± formatÄ±nda tutmanÄ±z daha saÄŸlÄ±klÄ±.
+     * 9.000 gibi Türkçe binlik ayracı için nokta tamamen kaldırılır.
+     * 9000.50 gibi ondalıklı veri kullanıyorsanız Google Sheet'i sayı formatında tutmanız daha sağlıklı.
      */
     if (/^\d{1,3}(\.\d{3})+$/.test(normalized)) {
       normalized = normalized.replace(/\./g, "");
@@ -175,13 +174,13 @@ function normalizeStatus(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLocaleUpperCase("tr-TR")
-    .replaceAll("Ä°", "I")
-    .replaceAll("IÌ‡", "I")
-    .replaceAll("Å", "S")
-    .replaceAll("Ä", "G")
-    .replaceAll("Ãœ", "U")
-    .replaceAll("Ã–", "O")
-    .replaceAll("Ã‡", "C");
+    .replaceAll("İ", "I")
+    .replaceAll("İ", "I")
+    .replaceAll("Ş", "S")
+    .replaceAll("Ğ", "G")
+    .replaceAll("Ü", "U")
+    .replaceAll("Ö", "O")
+    .replaceAll("Ç", "C");
 }
 
 function isKnownStatus(status: string) {
@@ -245,8 +244,8 @@ function writeDiskCache(data: Property[]) {
     );
   } catch {
     /**
-     * Disk cache yazÄ±lamazsa uygulama Ã§alÄ±ÅŸmaya devam etmeli.
-     * Ã–zellikle bazÄ± deployment ortamlarÄ±nda filesystem read-only olabilir.
+     * Disk cache yazılamazsa uygulama çalışmaya devam etmeli.
+     * Özellikle bazı deployment ortamlarında filesystem read-only olabilir.
      */
   }
 }
@@ -297,15 +296,21 @@ async function createSheetsClient() {
   const credentialsPath = resolveCredentialsPath();
 
   if (!SHEET_ID) {
-    console.warn("[googleSheets] GOOGLE_SHEET_ID eksik. Mock property verisi kullanÄ±lacak.");
+    console.warn("[googleSheets] GOOGLE_SHEET_ID eksik. Mock property verisi kullanılacak.");
     return null;
   }
 
-  if (!process.env.GOOGLE_SERVICE_ACCOUNT_JSON?.trim() && (!credentialsPath || !fs.existsSync(credentialsPath))) {
-    console.warn("[googleSheets] GOOGLE_APPLICATION_CREDENTIALS bulunamadÄ±. Mock property verisi kullanÄ±lacak:", credentialsPath);
+  if (!credentialsPath || !fs.existsSync(credentialsPath)) {
+    console.warn("[googleSheets] GOOGLE_APPLICATION_CREDENTIALS bulunamadı. Mock property verisi kullanılacak:", credentialsPath);
     return null;
   }
-return getGoogleSheetsClient();
+
+  const auth = new google.auth.GoogleAuth({
+    keyFile: credentialsPath,
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+  });
+
+  return google.sheets({ version: "v4", auth });
 }
 
 async function getSheetsClient() {
@@ -373,8 +378,8 @@ export async function getPropertiesFromSheet(): Promise<Property[]> {
   }
 
   /**
-   * Son baÅŸarÄ±sÄ±z okuma Ã§ok yeniyse Google API'ye tekrar yÃ¼k bindirme.
-   * Bu Ã¶zellikle Next dev server hot reload sÄ±rasÄ±nda kotayÄ± korur.
+   * Son başarısız okuma çok yeniyse Google API'ye tekrar yük bindirme.
+   * Bu özellikle Next dev server hot reload sırasında kotayı korur.
    */
   if (store.lastFailedAt && now - store.lastFailedAt < FAILED_READ_COOLDOWN_MS) {
     return getFallbackProperties(now);
@@ -401,9 +406,9 @@ export async function getPropertiesFromSheet(): Promise<Property[]> {
       store.lastFailedAt = Date.now();
 
       if (isQuotaError(error)) {
-        console.warn("[googleSheets] Google Sheets kota limiti aÅŸÄ±ldÄ±. Cache/stale veri kullanÄ±lacak.");
+        console.warn("[googleSheets] Google Sheets kota limiti aşıldı. Cache/stale veri kullanılacak.");
       } else {
-        console.warn("[googleSheets] Sheet batch okuma hatasÄ±. Cache/stale veri kullanÄ±lacak:", error);
+        console.warn("[googleSheets] Sheet batch okuma hatası. Cache/stale veri kullanılacak:", error);
       }
 
       return getFallbackProperties(Date.now());
@@ -426,9 +431,6 @@ export function clearGoogleSheetsCache() {
       fs.unlinkSync(DISK_CACHE_PATH);
     }
   } catch {
-    // Cache temizleme baÅŸarÄ±sÄ±z olsa bile uygulamayÄ± durdurma.
+    // Cache temizleme başarısız olsa bile uygulamayı durdurma.
   }
 }
-
-
-

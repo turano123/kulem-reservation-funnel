@@ -1,3 +1,4 @@
+﻿import { getGoogleSheetsClient } from "./google-auth";
 import path from "path";
 import { google, sheets_v4 } from "googleapis";
 
@@ -28,7 +29,7 @@ type CachedMetaMap = {
 const PROPERTY_SHEETS: PropertySheetConfig[] = [
   {
     slug: "kule-yesil-ev",
-    name: "Kule Yeşil Ev",
+    name: "Kule YeÅŸil Ev",
     sheetTitle: "KulemYESILEV"
   },
   {
@@ -69,7 +70,7 @@ function resolveGoogleCredentialsPath() {
   const rawPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
   if (!rawPath) {
-    throw new Error("GOOGLE_APPLICATION_CREDENTIALS tanımlı değil.");
+    throw new Error("GOOGLE_APPLICATION_CREDENTIALS tanÄ±mlÄ± deÄŸil.");
   }
 
   return path.isAbsolute(rawPath) ? rawPath : path.join(process.cwd(), rawPath);
@@ -79,7 +80,7 @@ function getSpreadsheetId() {
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
   if (!spreadsheetId) {
-    throw new Error("GOOGLE_SHEET_ID tanımlı değil.");
+    throw new Error("GOOGLE_SHEET_ID tanÄ±mlÄ± deÄŸil.");
   }
 
   return spreadsheetId;
@@ -112,12 +113,12 @@ function normalizeText(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLocaleLowerCase("tr-TR")
-    .replaceAll("ı", "i")
-    .replaceAll("ş", "s")
-    .replaceAll("ğ", "g")
-    .replaceAll("ü", "u")
-    .replaceAll("ö", "o")
-    .replaceAll("ç", "c");
+    .replaceAll("Ä±", "i")
+    .replaceAll("ÅŸ", "s")
+    .replaceAll("ÄŸ", "g")
+    .replaceAll("Ã¼", "u")
+    .replaceAll("Ã¶", "o")
+    .replaceAll("Ã§", "c");
 }
 
 function parseSheetDate(raw: unknown): string | null {
@@ -155,7 +156,7 @@ function parsePrice(raw: unknown): number | null {
   const value = String(raw).trim();
   if (!value) return null;
 
-  const compact = value.replace(/\s/g, "").replace(/[₺₼€$]/g, "");
+  const compact = value.replace(/\s/g, "").replace(/[â‚ºâ‚¼â‚¬$]/g, "");
 
   let normalized = compact;
 
@@ -206,15 +207,7 @@ function formatIsoLocal(date: Date) {
 }
 
 async function createSheetsClient(): Promise<sheets_v4.Sheets> {
-  const auth = new google.auth.GoogleAuth({
-    keyFile: resolveGoogleCredentialsPath(),
-    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-  });
-
-  return google.sheets({
-    version: "v4",
-    auth
-  });
+return getGoogleSheetsClient();
 }
 
 async function getSheetsClient(): Promise<sheets_v4.Sheets> {
@@ -343,7 +336,7 @@ async function getAllPropertyCardMeta(): Promise<PropertyCardMetaMap> {
       return data;
     })
     .catch((error) => {
-      console.error("[getPropertyCardMeta] Google Sheet batch okuma hatası:", error);
+      console.error("[getPropertyCardMeta] Google Sheet batch okuma hatasÄ±:", error);
 
       if (staleMetaMap && staleMetaMap.expiresAt > Date.now()) {
         return staleMetaMap.data;
@@ -386,3 +379,6 @@ export function clearPropertyCardMetaCache() {
   cachedMetaMap = null;
   pendingMetaRead = null;
 }
+
+
+

@@ -1,4 +1,3 @@
-﻿import { getGoogleSheetsClient } from "./google-auth";
 import path from "path";
 import { google, sheets_v4 } from "googleapis";
 
@@ -25,13 +24,13 @@ export type DailyLowestPrice = {
 const PROPERTY_SHEETS: PropertySheetConfig[] = [
   {
     slug: "kule-yesil-ev",
-    name: "Kule YeÅŸil Ev",
-    sheetAliases: ["KulemYESILEV", "kule yeÅŸil ev", "YEÅÄ°L EV"]
+    name: "Kule Yeşil Ev",
+    sheetAliases: ["KulemYESILEV", "kule yeşil ev", "YEŞİL EV"]
   },
   {
     slug: "kule-suit",
     name: "Kule Suit",
-    sheetAliases: ["KulemSUIT", "KULE SUÄ°T", "KULE SUIT"]
+    sheetAliases: ["KulemSUIT", "KULE SUİT", "KULE SUIT"]
   },
   {
     slug: "kule-deluxe",
@@ -52,7 +51,7 @@ function getSpreadsheetId() {
   const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
   if (!spreadsheetId) {
-    throw new Error("GOOGLE_SHEET_ID tanÄ±mlÄ± deÄŸil.");
+    throw new Error("GOOGLE_SHEET_ID tanımlı değil.");
   }
 
   return spreadsheetId;
@@ -62,7 +61,7 @@ function resolveGoogleCredentialsPath() {
   const rawPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 
   if (!rawPath) {
-    throw new Error("GOOGLE_APPLICATION_CREDENTIALS tanÄ±mlÄ± deÄŸil.");
+    throw new Error("GOOGLE_APPLICATION_CREDENTIALS tanımlı değil.");
   }
 
   return path.isAbsolute(rawPath) ? rawPath : path.join(process.cwd(), rawPath);
@@ -72,12 +71,12 @@ function normalizeText(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLocaleLowerCase("tr-TR")
-    .replaceAll("Ä±", "i")
-    .replaceAll("ÅŸ", "s")
-    .replaceAll("ÄŸ", "g")
-    .replaceAll("Ã¼", "u")
-    .replaceAll("Ã¶", "o")
-    .replaceAll("Ã§", "c");
+    .replaceAll("ı", "i")
+    .replaceAll("ş", "s")
+    .replaceAll("ğ", "g")
+    .replaceAll("ü", "u")
+    .replaceAll("ö", "o")
+    .replaceAll("ç", "c");
 }
 
 function escapeSheetTitle(sheetTitle: string) {
@@ -131,7 +130,7 @@ function isAvailableStatus(raw: unknown) {
   return [
     "bos",
     "musait",
-    "mÃ¼sait",
+    "müsait",
     "available",
     "uygun",
     "true",
@@ -141,7 +140,15 @@ function isAvailableStatus(raw: unknown) {
 }
 
 async function getSheetsClient(): Promise<sheets_v4.Sheets> {
-return getGoogleSheetsClient();
+  const auth = new google.auth.GoogleAuth({
+    keyFile: resolveGoogleCredentialsPath(),
+    scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"]
+  });
+
+  return google.sheets({
+    version: "v4",
+    auth
+  });
 }
 
 async function listSheetTitles(
@@ -174,7 +181,7 @@ function resolveActualSheetTitle(
   }
 
   throw new Error(
-    `${property.name} iÃ§in sheet bulunamadÄ±. Beklenen tablar: ${property.sheetAliases.join(", ")}`
+    `${property.name} için sheet bulunamadı. Beklenen tablar: ${property.sheetAliases.join(", ")}`
   );
 }
 
@@ -199,7 +206,7 @@ function getMonthDates(month: string) {
   const monthIndex = Number(monthText) - 1;
 
   if (!Number.isInteger(year) || !Number.isInteger(monthIndex) || monthIndex < 0 || monthIndex > 11) {
-    throw new Error("month parametresi YYYY-MM formatÄ±nda olmalÄ±.");
+    throw new Error("month parametresi YYYY-MM formatında olmalı.");
   }
 
   const lastDay = new Date(year, monthIndex + 1, 0).getDate();
@@ -277,7 +284,7 @@ export async function getLowestPricesForMonth(month: string) {
 
 export async function getLowestPriceForDate(date: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error("date parametresi YYYY-MM-DD formatÄ±nda olmalÄ±.");
+    throw new Error("date parametresi YYYY-MM-DD formatında olmalı.");
   }
 
   const month = date.slice(0, 7);
@@ -292,9 +299,7 @@ export async function getLowestPriceForDate(date: string) {
     availableProperties: dayData?.availableProperties ?? [],
     message:
       dayData?.lowestPrice === null
-        ? "SeÃ§ilen gÃ¼n iÃ§in mÃ¼sait ev bulunamadÄ±."
+        ? "Seçilen gün için müsait ev bulunamadı."
         : undefined
   };
 }
-
-
