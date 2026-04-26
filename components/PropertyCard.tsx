@@ -113,71 +113,65 @@ function normalizeText(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLocaleLowerCase("tr-TR")
-    .replaceAll("Ä±", "i")
-    .replaceAll("ÅŸ", "s")
-    .replaceAll("ÄŸ", "g")
-    .replaceAll("Ã¼", "u")
-    .replaceAll("Ã¶", "o")
-    .replaceAll("Ã§", "c");
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0131/g, "i")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 function parseSheetDate(raw: unknown): string | null {
   if (raw === null || raw === undefined || raw === "") return null;
 
-  const value = String(raw).trim();
-
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return value;
-  }
-
-  if (/^\d{2}\.\d{2}\.\d{4}$/.test(value)) {
-    const [dd, mm, yyyy] = value.split(".");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
-    const [dd, mm, yyyy] = value.split("/");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return null;
-
-  return formatIsoLocal(parsed);
-}
-
-function parsePrice(raw: unknown): number | null {
-  if (raw === null || raw === undefined || raw === "") return null;
-
   if (typeof raw === "number" && Number.isFinite(raw)) {
-    return raw;
+    const epoch = Date.UTC(1899, 11, 30);
+    const date = new Date(epoch + Math.round(raw * 86400000));
+    return Number.isNaN(date.getTime()) ? null : date.toISOString().slice(0, 10);
+  }
+
+  if (raw instanceof Date && !Number.isNaN(raw.getTime())) {
+    return raw.toISOString().slice(0, 10);
   }
 
   const value = String(raw).trim();
   if (!value) return null;
 
-  const compact = value.replace(/\s/g, "").replace(/[â‚ºâ‚¼â‚¬$]/g, "");
-
-  let normalized = compact;
-
-  if (compact.includes(",") && compact.includes(".")) {
-    const lastComma = compact.lastIndexOf(",");
-    const lastDot = compact.lastIndexOf(".");
-
-    normalized =
-      lastComma > lastDot
-        ? compact.replace(/\./g, "").replace(",", ".")
-        : compact.replace(/,/g, "");
-  } else if (compact.includes(",")) {
-    normalized = compact.replace(/\./g, "").replace(",", ".");
-  } else {
-    normalized = compact.replace(/,/g, "");
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    return `${isoMatch[1]}-${isoMatch[2]}-${isoMatch[3]}`;
   }
 
-  normalized = normalized.replace(/[^\d.-]/g, "");
+  const trMatch = value.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (trMatch) {
+    const day = trMatch[1].padStart(2, "0");
+    const month = trMatch[2].padStart(2, "0");
+    const year = trMatch[3];
+    return `${year}-${month}-${day}`;
+  }
 
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : null;
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  return null;
+}
+function parsePrice(raw: unknown): number | null {
+  if (raw === null || raw === undefined || raw === "") return null;
+
+  if (typeof raw === "number" && Number.isFinite(raw)) {
+    return raw > 0 ? raw : null;
+  }
+
+  const cleaned = String(raw)
+    .trim()
+    .replace(/[^\d.,-]/g, "")
+    .replace(/\.(?=\d{3}(\D|$))/g, "")
+    .replace(",", ".");
+
+  const value = Number(cleaned);
+
+  return Number.isFinite(value) && value > 0 ? value : null;
 }
 
 function isAvailableStatus(raw: unknown) {
@@ -379,6 +373,8 @@ export function clearPropertyCardMetaCache() {
   cachedMetaMap = null;
   pendingMetaRead = null;
 }
+
+
 
 
 

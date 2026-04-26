@@ -137,37 +137,14 @@ function parsePrice(value: unknown): number {
     return value > 0 ? value : 0;
   }
 
-  const raw = String(value ?? "").trim();
-  if (!raw) return 0;
+  const cleaned = String(value ?? "")
+    .trim()
+    .replace(/[^\d.,-]/g, "")
+    .replace(/\.(?=\d{3}(\D|$))/g, "")
+    .replace(",", ".");
 
-  const compact = raw.replace(/\s/g, "").replace(/[â‚ºâ‚¼â‚¬$]/g, "");
-  let normalized = compact;
+  const parsed = Number(cleaned);
 
-  if (compact.includes(",") && compact.includes(".")) {
-    const lastComma = compact.lastIndexOf(",");
-    const lastDot = compact.lastIndexOf(".");
-
-    normalized =
-      lastComma > lastDot
-        ? compact.replace(/\./g, "").replace(",", ".")
-        : compact.replace(/,/g, "");
-  } else if (compact.includes(",")) {
-    normalized = compact.replace(/\./g, "").replace(",", ".");
-  } else {
-    normalized = compact.replace(/,/g, "");
-
-    /**
-     * 9.000 gibi TÃ¼rkÃ§e binlik ayracÄ± iÃ§in nokta tamamen kaldÄ±rÄ±lÄ±r.
-     * 9000.50 gibi ondalÄ±klÄ± veri kullanÄ±yorsanÄ±z Google Sheet'i sayÄ± formatÄ±nda tutmanÄ±z daha saÄŸlÄ±klÄ±.
-     */
-    if (/^\d{1,3}(\.\d{3})+$/.test(normalized)) {
-      normalized = normalized.replace(/\./g, "");
-    }
-  }
-
-  normalized = normalized.replace(/[^\d.-]/g, "");
-
-  const parsed = Number(normalized);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 }
 
@@ -175,13 +152,9 @@ function normalizeStatus(value: unknown) {
   return String(value ?? "")
     .trim()
     .toLocaleUpperCase("tr-TR")
-    .replaceAll("Ä°", "I")
-    .replaceAll("IÌ‡", "I")
-    .replaceAll("Å", "S")
-    .replaceAll("Ä", "G")
-    .replaceAll("Ãœ", "U")
-    .replaceAll("Ã–", "O")
-    .replaceAll("Ã‡", "C");
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Z0-9]+/g, "");
 }
 
 function isKnownStatus(status: string) {
@@ -429,6 +402,7 @@ export function clearGoogleSheetsCache() {
     // Cache temizleme baÅŸarÄ±sÄ±z olsa bile uygulamayÄ± durdurma.
   }
 }
+
 
 
 
