@@ -30,7 +30,7 @@ const PROPERTY_SHEETS: PropertySheetConfig[] = [
   {
     slug: "kule-yesil-ev",
     name: "Kule YeÅŸil Ev",
-    sheetTitle: "KulemYESILEV"
+    sheetTitle: "KulemYESİLEV"
   },
   {
     slug: "kule-suit",
@@ -379,6 +379,7 @@ export function clearPropertyCardMetaCache() {
   cachedMetaMap = null;
   pendingMetaRead = null;
 }
+
 
 
 

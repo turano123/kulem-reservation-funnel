@@ -53,7 +53,7 @@ const DISK_CACHE_PATH =
   path.join(process.cwd(), ".next", "cache", "kule-google-sheets-properties.json");
 
 const PROPERTY_SHEET_MAP: Record<string, string> = {
-  "kule-yesil-ev": "KulemYESILEV",
+  "kule-yesil-ev": "KulemYESİLEV",
   "kule-suit": "KulemSUIT",
   "kule-deluxe": "KulemDeluxe"
 };
@@ -429,6 +429,7 @@ export function clearGoogleSheetsCache() {
     // Cache temizleme baÅŸarÄ±sÄ±z olsa bile uygulamayÄ± durdurma.
   }
 }
+
 
 
 

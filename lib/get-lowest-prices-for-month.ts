@@ -26,7 +26,7 @@ const PROPERTY_SHEETS: PropertySheetConfig[] = [
   {
     slug: "kule-yesil-ev",
     name: "Kule YeÅŸil Ev",
-    sheetAliases: ["KulemYESILEV", "kule yeÅŸil ev", "YEÅÄ°L EV"]
+    sheetAliases: ["KulemYESİLEV", "kule yeÅŸil ev", "YEÅÄ°L EV"]
   },
   {
     slug: "kule-suit",
@@ -296,5 +296,6 @@ export async function getLowestPriceForDate(date: string) {
         : undefined
   };
 }
+
 
 
