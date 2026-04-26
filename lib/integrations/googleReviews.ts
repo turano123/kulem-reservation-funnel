@@ -36,7 +36,7 @@ type GoogleTextSearchResponse = {
   places?: GooglePlace[];
 };
 
-type GoogleBusinessReviewsPayload = {
+export type GoogleBusinessReviewsPayload = {
   businessName: string;
   rating: number;
   reviewCount: number;
@@ -198,3 +198,20 @@ export async function getGoogleBusinessReviews(): Promise<GoogleBusinessReviewsP
     return FALLBACK_GOOGLE_REVIEWS;
   }
 }
+
+/**
+ * Production uyumluluk export'u.
+ *
+ * lib/reviews.ts dosyası named export olarak `getGoogleReviews` bekliyor.
+ * Bu fonksiyon Google Business payload'unun içinden yalnızca Review[] döndürür.
+ * propertySlug parametresi mevcut çağrılarla uyum için tutulur; Google işletme
+ * yorumları işletme seviyesinde geldiği için şimdilik filtrelenmez.
+ */
+export async function getGoogleReviews(propertySlug?: string): Promise<Review[]> {
+  void propertySlug;
+
+  const payload = await getGoogleBusinessReviews();
+  return payload.reviews;
+}
+
+export default getGoogleReviews;
