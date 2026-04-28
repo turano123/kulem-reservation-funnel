@@ -53,3 +53,7 @@ test-results/
 tmp/
 temp/
 uploads/tmp/
+# Local script backups
+*.bak
+*.bak-*
+*.bak-clean-property-links

@@ -108,7 +108,7 @@ function buildPropertyHref(item: ResultItem, search: any) {
     }
   }
 
-  return `/properties/${item.property.slug}?${params.toString()}`;
+  return `/properties/${item.property.slug}`;
 }
 
 function resolvePrice(item: ResultItem, mode: SearchMode): PriceDisplay {

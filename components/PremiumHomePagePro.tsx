@@ -1669,7 +1669,7 @@ function PremiumPropertyCard({
 
   return (
     <Link
-      href={`/properties/${property.slug}?${queryString}`}
+      href={`/properties/${property.slug}`}
       className="kp-property-card"
       aria-label={`${property.name} detaylarını gör`}
     >
