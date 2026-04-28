@@ -152,7 +152,10 @@ function getTotalGuestCount(adults: number, children: number) {
 }
 
 function getExtraGuestCount(property: PropertyWithSheetRows, adults: number, children: number) {
-  return Math.max(0, getTotalGuestCount(adults, children) - getBaseGuestLimit(property));
+  // 0-12 yaş çocuklar kapasiteye dahil edilir ama ek kişi ücretine dahil edilmez.
+  void children;
+
+  return Math.max(0, Math.max(0, adults) - getBaseGuestLimit(property));
 }
 
 function getExtraGuestDailyFee(property: PropertyWithSheetRows, adults: number, children: number) {
@@ -990,10 +993,10 @@ function ReservationPanel(props: ReservationPanelProps) {
           </div>
 
           <p>
-            Baz fiyat {baseGuestLimit} kişi içindir.
+            Baz fiyat {baseGuestLimit} yetişkin içindir.
             {extraGuestCount > 0
               ? ` +${extraGuestCount} ek kişi için günlük ₺${formatPrice(extraGuestDailyFee)} eklenmiştir.`
-              : " Ek kişi ücreti oluşmadı."}
+              : " Ek yetişkin ücreti oluşmadı."}
           </p>
         </div>
       ) : null}
@@ -1025,7 +1028,7 @@ function ReservationPanel(props: ReservationPanelProps) {
             {extraGuestTotal > 0 ? (
               <div className="kule-pro-price-row">
                 <span>
-                  Ek kişi ücreti
+                  Ek yetişkin ücreti
                   <small>
                     {extraGuestCount} kişi × {nights} gece × ₺{formatPrice(EXTRA_GUEST_DAILY_FEE)}
                   </small>
@@ -1052,7 +1055,7 @@ function ReservationPanel(props: ReservationPanelProps) {
             </div>
 
             <p className="kule-pro-payment-note">
-              Baz fiyat {baseGuestLimit} kişi içindir. Bu rezervasyonda toplam {totalGuests} kişi seçildi.
+              Baz fiyat {baseGuestLimit} yetişkin içindir. Bu rezervasyonda toplam {totalGuests} kişi seçildi. 0-12 yaş çocuklar ücretsizdir.
             </p>
           </div>
         </div>
