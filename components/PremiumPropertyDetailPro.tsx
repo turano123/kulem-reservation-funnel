@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -87,7 +87,7 @@ const propertyFeatures: Record<string, FeatureItem[]> = {
     { icon: "🔥", text: "Doğalgaz şöminesi", group: "Keyif" },
     { icon: "🔥", text: "Kış bahçesi odun şöminesi", group: "Keyif" },
     { icon: "🅿️", text: "Özel otopark", group: "Olanaklar" },
-    { icon: "🛏️", text: "3 yatak odası", group: "Konfor" },
+    { icon: "🛏️", text: "2 jakuzili ebeveyn banyolu yatak odası + 1 standart yatak odası", group: "Konfor" },
     { icon: "🛋️", text: "1 oturma odası", group: "Konfor" },
     { icon: "🧸", text: "Park bebek yatağı (0-3 yaş)", group: "Aile Dostu" },
     { icon: "☕", text: "Sabah kahvaltısı", group: "Olanaklar" },
@@ -271,12 +271,27 @@ function normalizeReview(review: unknown, index: number): DisplayReview {
   };
 }
 
-function clampReviews(reviews: unknown[]): DisplayReview[] {
-  if (reviews.length) {
-    return reviews.map(normalizeReview).slice(0, 6);
-  }
+const hiddenReviewAuthorKeys = new Set(["betul urkmez"]);
 
-  return [
+function normalizeReviewAuthorKey(value: string) {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ü/g, "u")
+    .replace(/ö/g, "o")
+    .replace(/ğ/g, "g")
+    .replace(/ş/g, "s")
+    .replace(/ç/g, "c")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isHiddenReviewAuthor(authorName: string) {
+  return hiddenReviewAuthorKeys.has(normalizeReviewAuthorKey(authorName));
+}
+
+function clampReviews(reviews: unknown[]): DisplayReview[] {
+  const fallbackReviews: DisplayReview[] = [
     {
       id: "fallback-google-1",
       authorName: "Google Misafiri",
@@ -296,6 +311,13 @@ function clampReviews(reviews: unknown[]): DisplayReview[] {
       text: "Harika bir tatildi, her şey düşünülmüş. Teşekkürler."
     }
   ];
+
+  const visibleReviews = reviews
+    .map(normalizeReview)
+    .filter((review) => !isHiddenReviewAuthor(review.authorName))
+    .filter((review) => review.text.trim().length > 0);
+
+  return [...visibleReviews, ...fallbackReviews].slice(0, 6);
 }
 
 function getInitials(name: string) {
@@ -591,15 +613,7 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
           </section>
 
           <FeatureSection features={features} />
-
-          <GuestReviews
-            rating={googleRating}
-            count={googleReviewCount}
-            reviews={reviewItems}
-            url={property.googleReviewUrl}
-          />
-
-          <TrustBar />
+<TrustBar />
         </div>
 
         <ReservationPanel
@@ -1109,7 +1123,7 @@ function GoogleReviewSummary({
               </div>
 
               <div className="kule-pro-stars">{"★".repeat(review.rating)}</div>
-              <p>{review.text}</p>
+              <p className="kule-pro-review-text-full">{review.text}</p>
 
               <div className="kule-pro-google-tag">
                 <GoogleIcon /> Google Yorumu
@@ -1214,89 +1228,6 @@ function FeatureSection({ features }: { features: FeatureItem[] }) {
   );
 }
 
-function GuestReviews({
-  rating,
-  count,
-  reviews,
-  url
-}: {
-  rating: number;
-  count: number;
-  reviews: DisplayReview[];
-  url?: string;
-}) {
-  return (
-    <section id="reviews" className="kule-pro-card kule-pro-guest-reviews">
-      <div className="kule-pro-section-head">
-        <div>
-          <h2 className="kule-pro-section-title">Misafir Yorumları</h2>
-          <p>Google İşletme Profili üzerinden öne çıkan deneyimler.</p>
-        </div>
-
-        <div className="kule-pro-section-score">
-          <strong>{rating.toFixed(1)} / 5</strong>
-          <span>{count} yorum</span>
-        </div>
-      </div>
-
-      <div className="kule-pro-reviews-grid">
-        <div className="kule-pro-score-card">
-          <strong>{rating.toFixed(1)}</strong>
-          <span>/5</span>
-
-          <div className="kule-pro-stars">★★★★★</div>
-
-          <div className="kule-pro-score-lines">
-            <ScoreRow label="Temizlik" score="4.9" />
-            <ScoreRow label="Konum" score="4.9" />
-            <ScoreRow label="İletişim" score="5.0" />
-            <ScoreRow label="Fiyat / Performans" score="4.8" />
-          </div>
-
-          {url ? (
-            <a href={url} target="_blank" rel="noreferrer" className="kule-pro-score-link">
-              Tüm Yorumları Gör
-            </a>
-          ) : null}
-        </div>
-
-        {reviews.slice(0, 3).map((review) => (
-          <article key={`guest-${review.id}`} className="kule-pro-review-card">
-            <div className="kule-pro-review-user">
-              {review.profilePhotoUrl ? (
-                <img className="kule-pro-avatar-img" src={review.profilePhotoUrl} alt={review.authorName} />
-              ) : (
-                <span className="kule-pro-avatar">{getInitials(review.authorName)}</span>
-              )}
-
-              <div>
-                <strong>{review.authorName}</strong>
-                <span>{review.relativeTime || "Google Yorumu"}</span>
-              </div>
-            </div>
-
-            <div className="kule-pro-stars">{"★".repeat(review.rating)}</div>
-            <p>{review.text}</p>
-
-            <div className="kule-pro-google-tag">
-              <GoogleIcon /> Google Yorumu
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function ScoreRow({ label, score }: { label: string; score: string }) {
-  return (
-    <div className="kule-pro-score-row">
-      <span>{label}</span>
-      <strong>{score}</strong>
-    </div>
-  );
-}
-
 function TrustBar() {
   const items = [
     {
@@ -1338,3 +1269,5 @@ function TrustBar() {
     </section>
   );
 }
+
+

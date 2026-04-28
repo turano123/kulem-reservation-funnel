@@ -1,4 +1,4 @@
-@import "react-day-picker/dist/style.css";
+﻿@import "react-day-picker/dist/style.css";
 
 /* =========================================================
    KULE SAPANCA — GLOBAL + PROPERTY DETAIL CSS
@@ -2554,4 +2554,67 @@ hr.soft {
 
 .kule-pro-warning {
   color: #92400e;
+}
+
+.kule-pro-google-summary .kule-pro-review-text-full {
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: none;
+  white-space: normal;
+}
+
+
+/* Rezervasyon oluştur butonu yazı rengi */
+.kule-pro-reserve-action button,
+.kule-pro-reserve-action button *,
+.kule-pro-reserve-action a,
+.kule-pro-reserve-action a * {
+  color: #ffffff !important;
+}
+
+/* Rezervasyon takvimi modal ortalama düzeltmesi */
+.kule-reservation-modal,
+.kule-reservation-calendar-modal,
+.kule-booking-modal,
+.kule-calendar-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+  transform: none !important;
+  margin: 0 !important;
+}
+
+.kule-reservation-modal > *,
+.kule-reservation-calendar-modal > *,
+.kule-booking-modal > *,
+.kule-calendar-modal > * {
+  max-height: calc(100vh - 48px) !important;
+  overflow-y: auto !important;
+  margin: 0 auto !important;
+}
+
+@media (max-width: 768px) {
+  .kule-reservation-modal,
+  .kule-reservation-calendar-modal,
+  .kule-booking-modal,
+  .kule-calendar-modal {
+    align-items: flex-start !important;
+    padding: 16px !important;
+    overflow-y: auto !important;
+  }
+
+  .kule-reservation-modal > *,
+  .kule-reservation-calendar-modal > *,
+  .kule-booking-modal > *,
+  .kule-calendar-modal > * {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
 }
