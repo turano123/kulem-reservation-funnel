@@ -613,6 +613,7 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
           </section>
 
           <FeatureSection features={features} />
+<TrustBar />
         </div>
 
         <ReservationPanel
@@ -647,8 +648,6 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
           onChildrenChange={changeChildren}
           onChildAgeChange={setChildAge}
         />
-
-        <TrustBar />
       </section>
 
       {galleryOpen ? (
