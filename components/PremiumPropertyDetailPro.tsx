@@ -223,6 +223,63 @@ function getNightCount(checkin: string, checkout: string) {
   return Math.max(0, Math.round(diff / 86400000));
 }
 
+function addDaysToInputDate(date: string, days: number) {
+  const next = new Date(toDate(date));
+  next.setDate(next.getDate() + days);
+
+  return toInputDate(next);
+}
+
+function isSheetNightAvailable(date: string, sheetDayMap: Map<string, SheetDay>) {
+  const dayData = sheetDayMap.get(date);
+
+  if (!dayData) {
+    return false;
+  }
+
+  return !isBusyStatus(dayData.status);
+}
+
+function getStayRuleMessage(checkin: string, checkout: string, sheetDayMap: Map<string, SheetDay>) {
+  const nights = getNightCount(checkin, checkout);
+
+  if (!checkin || !checkout || nights <= 0) {
+    return "";
+  }
+
+  // Sadece tek gece seçimlerde hafta sonu parçalama kontrolü yapılır.
+  if (nights !== 1) {
+    return "";
+  }
+
+  const checkinDay = toDate(checkin).getDay();
+
+  // JS günleri: Pazar 0, Pazartesi 1, Cuma 5, Cumartesi 6
+  const isFridayNight = checkinDay === 5;
+  const isSaturdayNight = checkinDay === 6;
+  const isSundayNight = checkinDay === 0;
+
+  const previousNight = addDaysToInputDate(checkin, -1);
+  const nextNight = addDaysToInputDate(checkin, 1);
+
+  const previousNightAvailable = isSheetNightAvailable(previousNight, sheetDayMap);
+  const nextNightAvailable = isSheetNightAvailable(nextNight, sheetDayMap);
+
+  if (isFridayNight && nextNightAvailable) {
+    return "Cuma gecesi tek gece olarak ayrılamıyor. Cumartesi gecesi de müsait olduğu için hafta sonu minimum 2 gece seçim yapılmalıdır.";
+  }
+
+  if (isSaturdayNight && (previousNightAvailable || nextNightAvailable)) {
+    return "Cumartesi gecesi tek gece olarak ayrılamıyor. Cuma veya Pazar gecesiyle 2 gecelik hafta sonu konaklaması yapılabildiği için minimum 2 gece seçim yapılmalıdır.";
+  }
+
+  if (isSundayNight && previousNightAvailable) {
+    return "Pazar gecesi tek gece olarak ayrılamıyor. Cumartesi gecesi de müsait olduğu için Cumartesi + Pazar şeklinde minimum 2 gece seçim yapılmalıdır.";
+  }
+
+  // Yanındaki hafta sonu gecesi doluysa tek gece satışa izin verilir.
+  return "";
+}
 function getCalendarDays(year: number, month: number): CalendarDay[] {
   const firstDay = new Date(year, month, 1);
   const startOffset = (firstDay.getDay() + 6) % 7;
@@ -395,7 +452,10 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
   const extraGuestCount = getExtraGuestCount(property, adults, children);
   const extraGuestDailyFee = getExtraGuestDailyFee(property, adults, children);
 
-  const canReserve = hasDateSelection && adults > 0 && childAgesValid && withinGuestLimit;
+  const stayRuleMessage = getStayRuleMessage(checkin, checkout, sheetDayMap);
+
+  const canReserve =
+    hasDateSelection && adults > 0 && childAgesValid && withinGuestLimit && !stayRuleMessage;
 
   const monthLabel = new Intl.DateTimeFormat("tr-TR", {
     month: "long",
@@ -575,6 +635,7 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
             nights={nights}
             hasDateSelection={hasDateSelection}
             canReserve={canReserve}
+            stayRuleMessage={stayRuleMessage}
             withinGuestLimit={withinGuestLimit}
             totalGuests={totalGuests}
             baseGuestLimit={baseGuestLimit}
@@ -628,6 +689,7 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
           nights={nights}
           hasDateSelection={hasDateSelection}
           canReserve={canReserve}
+          stayRuleMessage={stayRuleMessage}
           withinGuestLimit={withinGuestLimit}
           totalGuests={totalGuests}
           baseGuestLimit={baseGuestLimit}
@@ -762,6 +824,7 @@ type ReservationPanelProps = {
   nights: number;
   hasDateSelection: boolean;
   canReserve: boolean;
+  stayRuleMessage: string;
   withinGuestLimit: boolean;
   totalGuests: number;
   baseGuestLimit: number;
@@ -796,6 +859,7 @@ function ReservationPanel(props: ReservationPanelProps) {
     nights,
     hasDateSelection,
     canReserve,
+    stayRuleMessage,
     withinGuestLimit,
     totalGuests,
     baseGuestLimit,
