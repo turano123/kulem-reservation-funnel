@@ -1,4 +1,4 @@
-﻿@import "react-day-picker/dist/style.css";
+@import "react-day-picker/dist/style.css";
 
 /* =========================================================
    KULE SAPANCA — GLOBAL + PROPERTY DETAIL CSS
@@ -2617,4 +2617,52 @@ hr.soft {
     width: 100% !important;
     max-width: 100% !important;
   }
+}
+
+
+/* Header gerçek logo */
+.kule-pro-logo {
+  overflow: hidden;
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+.kule-pro-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Header logo görsel zorlaması */
+.kule-pro-logo,
+.kule-home-logo,
+.kule-brand-logo,
+.kule-logo {
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.kule-pro-logo img,
+.kule-home-logo img,
+.kule-brand-logo img,
+.kule-logo img,
+[class*="logo"] img[src="/uploads/kule-sapanca-logo.webp"] {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Ana sayfa header logo */
+.kp-brand-mark {
+  overflow: hidden;
+  padding: 0 !important;
+}
+
+.kp-brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }

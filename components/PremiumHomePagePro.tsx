@@ -824,7 +824,7 @@ function Header() {
     <header className="kp-header">
       <div className="kp-container kp-header-inner">
         <Link href="/" className="kp-brand" aria-label="Kule Sapanca ana sayfa">
-          <span className="kp-brand-mark">K</span>
+          <span className="kp-brand-mark"><img src="/uploads/kule-sapanca-logo.webp" alt="Kule Sapanca Logo" /></span>
           <span>
             <strong>KULE SAPANCA</strong>
             <small>PREMIUM VILLA</small>

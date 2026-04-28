@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
@@ -705,7 +705,7 @@ function Header({ businessName }: { businessName: string }) {
     <header className="kule-pro-header">
       <div className="kule-container kule-pro-header-inner">
         <a href="/" className="kule-pro-brand">
-          <span className="kule-pro-logo">⌂</span>
+          <span className="kule-pro-logo"><img src="/uploads/kule-sapanca-logo.webp" alt="Kule Sapanca Logo" /></span>
           <span>
             <strong className="kule-pro-brand-title">{businessName}</strong>
             <span className="kule-pro-brand-subtitle">Premium Villa</span>
