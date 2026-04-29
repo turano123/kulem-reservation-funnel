@@ -2666,3 +2666,116 @@ hr.soft {
   object-fit: contain;
   display: block;
 }
+/* Kule Sapanca - Premium mobil rezervasyon deneyimi */
+.kule-pro-reservation-card {
+  scroll-margin-top: 96px;
+}
+
+.kule-pro-child-note {
+  margin-top: 12px;
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(18, 74, 47, 0.08);
+  color: #244234;
+  font-size: 13px;
+  line-height: 1.45;
+  border: 1px solid rgba(18, 74, 47, 0.12);
+}
+
+.kule-pro-mobile-sticky {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  body {
+    padding-bottom: 104px;
+  }
+
+  .kule-pro-content-grid {
+    padding-bottom: 120px;
+  }
+
+  .kule-pro-mobile-sticky {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(22, 35, 28, 0.12);
+    box-shadow: 0 -14px 40px rgba(0, 0, 0, 0.16);
+  }
+
+  .kule-pro-mobile-sticky-inner {
+    display: grid;
+    grid-template-columns: 1fr minmax(136px, 42%);
+    align-items: center;
+    gap: 10px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .kule-pro-mobile-sticky-info {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .kule-pro-mobile-sticky-info strong {
+    color: #10261b;
+    font-size: 18px;
+    line-height: 1.1;
+  }
+
+  .kule-pro-mobile-sticky-info span {
+    color: #34463c;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kule-pro-mobile-sticky-info small {
+    color: #66756d;
+    font-size: 11px;
+  }
+
+  .kule-pro-mobile-action,
+  .kule-pro-mobile-action > * {
+    width: 100%;
+  }
+
+  .kule-pro-mobile-action button,
+  .kule-pro-mobile-action a,
+  .kule-pro-mobile-scroll-btn {
+    width: 100%;
+    min-height: 50px;
+    border: 0;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 14px;
+    font-weight: 900;
+    font-size: 14px;
+    text-decoration: none;
+    color: #fff;
+    background: linear-gradient(135deg, #123f2a, #1f6b48);
+    box-shadow: 0 12px 28px rgba(18, 63, 42, 0.28);
+    cursor: pointer;
+  }
+}
+
+@media (min-width: 901px) {
+  .kule-pro-content-grid > .kule-pro-reservation-card {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+  }
+}

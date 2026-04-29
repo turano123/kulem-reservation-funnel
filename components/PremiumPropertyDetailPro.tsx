@@ -429,11 +429,34 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
   const [galleryOpen, setGalleryOpen] = useState(false);
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
 
+    function getSearchNumber(names: string[], fallback: number) {
+    for (const name of names) {
+      const rawValue = searchParams.get(name);
+
+      if (rawValue !== null && rawValue !== "") {
+        const value = Number(rawValue);
+
+        if (Number.isFinite(value)) {
+          return value;
+        }
+      }
+    }
+
+    return fallback;
+  }
+
+  const initialAdults = getSearchNumber(["adults", "adult", "guests", "guestCount"], 2);
+  const initialChildren = getSearchNumber(["children", "child", "kids"], 0);
+  const initialChildAges = (searchParams.get("childAges") ?? "")
+    .split(",")
+    .map((item) => Number(item))
+    .filter((age) => Number.isFinite(age) && age >= 0 && age <= 12);
+
   const [checkin, setCheckin] = useState(searchParams.get("checkin") ?? "");
   const [checkout, setCheckout] = useState(searchParams.get("checkout") ?? "");
-  const [adults, setAdults] = useState(Number(searchParams.get("adults") ?? 2));
-  const [children, setChildren] = useState(Number(searchParams.get("children") ?? 0));
-  const [childAges, setChildAges] = useState<number[]>([]);
+  const [adults, setAdults] = useState(Math.max(1, initialAdults || 2));
+  const [children, setChildren] = useState(Math.max(0, initialChildren || 0));
+  const [childAges, setChildAges] = useState<number[]>(initialChildAges);
 
   const initialDate = checkin ? toDate(checkin) : new Date();
   const [calendarYear, setCalendarYear] = useState(initialDate.getFullYear());
@@ -443,10 +466,8 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
   const nights = getNightCount(checkin, checkout);
   const hasDateSelection = Boolean(checkin && checkout && nights > 0);
 
-  const childAgesValid =
-    children === 0 ||
-    (childAges.length === children &&
-      childAges.every((age) => Number.isFinite(age) && age >= 0 && age <= 12));
+    // Çocuk seçimi 0-12 yaş kategorisidir; çocuklar ücretsizdir ve ek kişi ücretine dahil edilmez.
+  const childAgesValid = true;
 
   const totalGuests = getTotalGuestCount(adults, children);
   const maxGuests = property.maxGuests ?? 99;
@@ -624,40 +645,6 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
               ▦ Tüm fotoğrafları görüntüle
             </button>
           </div>
-
-          <ReservationPanel
-            monthLabel={monthLabel}
-            calendarDays={calendarDays}
-            sheetDayMap={sheetDayMap}
-            todayKey={todayKey}
-            checkin={checkin}
-            checkout={checkout}
-            adults={adults}
-            children={children}
-            childAges={childAges}
-            nights={nights}
-            hasDateSelection={hasDateSelection}
-            canReserve={canReserve}
-            stayRuleMessage={stayRuleMessage}
-            withinGuestLimit={withinGuestLimit}
-            totalGuests={totalGuests}
-            baseGuestLimit={baseGuestLimit}
-            extraGuestCount={extraGuestCount}
-            extraGuestDailyFee={extraGuestDailyFee}
-            baseSubtotal={baseSubtotal}
-            extraGuestTotal={extraGuestTotal}
-            selectedRows={selectedRows}
-            subtotal={subtotal}
-            cleaningFee={cleaningFee}
-            total={total}
-            property={property}
-            onPrevMonth={() => changeMonth(-1)}
-            onNextMonth={() => changeMonth(1)}
-            onSelectDate={selectDate}
-            onAdultsChange={setAdults}
-            onChildrenChange={changeChildren}
-            onChildAgeChange={setChildAge}
-          />
         </div>
       </section>
 
@@ -715,6 +702,25 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
 
         <TrustBar />
       </section>
+
+      <MobileStickyReserveBar
+        property={property}
+        checkin={checkin}
+        checkout={checkout}
+        adults={adults}
+        children={children}
+        childAges={childAges}
+        nights={nights}
+        hasDateSelection={hasDateSelection}
+        canReserve={canReserve}
+        total={total}
+        onSelectDates={() =>
+          document.getElementById("reservation")?.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          })
+        }
+      />
 
       {galleryOpen ? (
         <div
@@ -882,6 +888,9 @@ function ReservationPanel(props: ReservationPanelProps) {
     onChildrenChange,
     onChildAgeChange
   } = props;
+
+  void childAges;
+  void onChildAgeChange;
 
   return (
     <aside id="reservation" className="kule-pro-reservation-card">
@@ -1065,20 +1074,8 @@ function ReservationPanel(props: ReservationPanelProps) {
       <GuestCounter label="Çocuk" value={children} min={0} onChange={onChildrenChange} />
 
       {children > 0 ? (
-        <div className="kule-pro-child-ages">
-          {Array.from({ length: children }).map((_, index) => (
-            <label key={`child-age-${index}`}>
-              <span>{index + 1}. çocuk yaşı</span>
-              <select value={childAges[index] ?? ""} onChange={(event) => onChildAgeChange(index, event.target.value)} required>
-                <option value="">Yaş seçiniz</option>
-                {Array.from({ length: 13 }).map((__, age) => (
-                  <option key={`age-${age}`} value={age}>
-                    {age}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
+        <div className="kule-pro-child-note">
+          0-12 yaş çocuklar ücretsizdir. Çocuklar kapasiteye dahil edilir, ek kişi ücreti oluşturmaz.
         </div>
       ) : null}
 
@@ -1113,6 +1110,75 @@ function ReservationPanel(props: ReservationPanelProps) {
   );
 }
 
+
+function MobileStickyReserveBar({
+  property,
+  checkin,
+  checkout,
+  adults,
+  children,
+  childAges,
+  nights,
+  hasDateSelection,
+  canReserve,
+  total,
+  onSelectDates
+}: {
+  property: PropertyWithSheetRows;
+  checkin: string;
+  checkout: string;
+  adults: number;
+  children: number;
+  childAges: number[];
+  nights: number;
+  hasDateSelection: boolean;
+  canReserve: boolean;
+  total: number;
+  onSelectDates: () => void;
+}) {
+  const dateSummary = hasDateSelection
+    ? `${formatDate(checkin, { day: "numeric", month: "short" })} – ${formatDate(checkout, {
+        day: "numeric",
+        month: "short"
+      })} · ${nights} gece`
+    : "Tarih seç, canlı fiyatı gör";
+
+  const guestSummary = `${adults} yetişkin${children > 0 ? ` · ${children} çocuk` : ""}`;
+
+  return (
+    <div className="kule-pro-mobile-sticky" role="region" aria-label="Mobil rezervasyon kısayolu">
+      <div className="kule-pro-mobile-sticky-inner">
+        <div className="kule-pro-mobile-sticky-info">
+          <strong>{hasDateSelection && total ? `₺${formatPrice(total)}` : "Canlı fiyat"}</strong>
+          <span>{dateSummary}</span>
+          <small>{guestSummary}</small>
+        </div>
+
+        <div className="kule-pro-mobile-action">
+          {canReserve ? (
+            <ReserveButton
+              disabled={false}
+              payload={{
+                propertySlug: property.slug,
+                propertyName: property.name,
+                mode: "exact",
+                checkin,
+                checkout,
+                adults,
+                children,
+                childAges
+              }}
+            />
+          ) : (
+            <button type="button" className="kule-pro-mobile-scroll-btn" onClick={onSelectDates}>
+              {hasDateSelection ? "Bilgileri Tamamla" : "Tarih Seç"}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 function GuestCounter({
   label,
   value,
