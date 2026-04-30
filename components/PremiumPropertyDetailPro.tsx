@@ -260,7 +260,7 @@ function getStayRuleMessage(checkin: string, checkout: string, sheetDayMap: Map<
   // JS günleri: Pazar 0, Pazartesi 1, Cuma 5, Cumartesi 6
   const isFridayNight = checkinDay === 5;
   const isSaturdayNight = checkinDay === 6;
-  const isSundayNight = checkinDay === 0;
+  const isSundayNight = false; // Pazar gecesi hafta içi kabul edilir.
 
   const previousNight = addDaysToInputDate(checkin, -1);
   const nextNight = addDaysToInputDate(checkin, 1);
@@ -274,10 +274,6 @@ function getStayRuleMessage(checkin: string, checkout: string, sheetDayMap: Map<
 
   if (isSaturdayNight && (previousNightAvailable || nextNightAvailable)) {
     return "Cumartesi gecesi tek gece olarak ayrılamıyor. Cuma veya Pazar gecesiyle 2 gecelik hafta sonu konaklaması yapılabildiği için minimum 2 gece seçim yapılmalıdır.";
-  }
-
-  if (isSundayNight && previousNightAvailable) {
-    return "Pazar gecesi tek gece olarak ayrılamıyor. Cumartesi gecesi de müsait olduğu için Cumartesi + Pazar şeklinde minimum 2 gece seçim yapılmalıdır.";
   }
 
   // Yanındaki hafta sonu gecesi doluysa tek gece satışa izin verilir.
@@ -477,9 +473,17 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
   const extraGuestDailyFee = getExtraGuestDailyFee(property, adults, children);
 
   const stayRuleMessage = getStayRuleMessage(checkin, checkout, sheetDayMap);
+  const selectedDatesBlocked = hasDateSelection
+    ? hasBusyNightBetween(checkin, checkout, sheetDayMap)
+    : false;
 
   const canReserve =
-    hasDateSelection && adults > 0 && childAgesValid && withinGuestLimit && !stayRuleMessage;
+    hasDateSelection &&
+    adults > 0 &&
+    childAgesValid &&
+    withinGuestLimit &&
+    !stayRuleMessage &&
+    !selectedDatesBlocked;
 
   const monthLabel = new Intl.DateTimeFormat("tr-TR", {
     month: "long",
@@ -534,6 +538,164 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [galleryOpen, allImages.length]);
 
+
+  useEffect(() => {
+    if (!canReserve) return;
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const shouldAutoOpen =
+      params.get("directReservation") === "1" ||
+      params.get("fromHomeSearch") === "1" ||
+      window.sessionStorage.getItem("kule:directReservation") === "1";
+
+    if (!shouldAutoOpen) return;
+
+    window.sessionStorage.removeItem("kule:directReservation");
+
+    const timer = window.setTimeout(() => {
+      const reservationLink = document.querySelector<HTMLAnchorElement>(
+        "[data-kule-reserve-action] a[href]"
+      );
+
+      if (reservationLink?.href) {
+        window.location.href = reservationLink.href;
+        return;
+      }
+
+      const reservationButton = document.querySelector<HTMLButtonElement>(
+        "[data-kule-reserve-action] button"
+      );
+
+      reservationButton?.click();
+    }, 350);
+
+    return () => window.clearTimeout(timer);
+    // kule:auto-whatsapp-direct
+  }, [canReserve, checkin, checkout, adults, children]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+
+    let savedSearch: {
+      checkin?: string;
+      checkout?: string;
+      adults?: string | number;
+      children?: string | number;
+    } = {};
+
+    try {
+      savedSearch = JSON.parse(window.sessionStorage.getItem("kule:lastSearch") || "{}");
+    } catch {
+      savedSearch = {};
+    }
+
+    const nextCheckin = params.get("checkin") || savedSearch.checkin || "";
+    const nextCheckout = params.get("checkout") || savedSearch.checkout || "";
+    const nextAdults = Number(
+      params.get("adults") ||
+        params.get("adult") ||
+        params.get("guests") ||
+        params.get("guestCount") ||
+        savedSearch.adults ||
+        adults ||
+        2
+    );
+    const nextChildren = Number(
+      params.get("children") ||
+        params.get("child") ||
+        params.get("kids") ||
+        savedSearch.children ||
+        children ||
+        0
+    );
+
+    if (nextCheckin && nextCheckin !== checkin) {
+      setCheckin(nextCheckin);
+    }
+
+    if (nextCheckout && nextCheckout !== checkout) {
+      setCheckout(nextCheckout);
+    }
+
+    if (Number.isFinite(nextAdults) && nextAdults > 0 && nextAdults !== adults) {
+      setAdults(nextAdults);
+    }
+
+    if (Number.isFinite(nextChildren) && nextChildren >= 0 && nextChildren !== children) {
+      setChildren(nextChildren);
+    }
+
+    if (nextCheckin && nextCheckout) {
+      window.sessionStorage.setItem(
+        "kule:lastSearch",
+        JSON.stringify({
+          checkin: nextCheckin,
+          checkout: nextCheckout,
+          adults: String(Number.isFinite(nextAdults) && nextAdults > 0 ? nextAdults : 2),
+          children: String(Number.isFinite(nextChildren) && nextChildren >= 0 ? nextChildren : 0)
+        })
+      );
+    }
+    // kule:sync-home-search-to-detail
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+
+    let savedSearch: {
+      checkin?: string;
+      checkout?: string;
+      adults?: string | number;
+      children?: string | number;
+    } = {};
+
+    try {
+      savedSearch = JSON.parse(window.sessionStorage.getItem("kule:lastSearch") || "{}");
+    } catch {
+      savedSearch = {};
+    }
+
+    const nextCheckin = params.get("checkin") || savedSearch.checkin || "";
+    const nextCheckout = params.get("checkout") || savedSearch.checkout || "";
+    const nextAdults = Number(
+      params.get("adults") ||
+        params.get("adult") ||
+        params.get("guests") ||
+        params.get("guestCount") ||
+        savedSearch.adults ||
+        2
+    );
+    const nextChildren = Number(
+      params.get("children") ||
+        params.get("child") ||
+        params.get("kids") ||
+        savedSearch.children ||
+        0
+    );
+
+    if (nextCheckin && nextCheckin !== checkin) setCheckin(nextCheckin);
+    if (nextCheckout && nextCheckout !== checkout) setCheckout(nextCheckout);
+    if (Number.isFinite(nextAdults) && nextAdults > 0 && nextAdults !== adults) setAdults(nextAdults);
+    if (Number.isFinite(nextChildren) && nextChildren >= 0 && nextChildren !== children) setChildren(nextChildren);
+
+    if (nextCheckin && nextCheckout) {
+      window.sessionStorage.setItem(
+        "kule:lastSearch",
+        JSON.stringify({
+          checkin: nextCheckin,
+          checkout: nextCheckout,
+          adults: String(Number.isFinite(nextAdults) && nextAdults > 0 ? nextAdults : 2),
+          children: String(Number.isFinite(nextChildren) && nextChildren >= 0 ? nextChildren : 0)
+        })
+      );
+    }
+    // kule:detail-search-sync
+  }, []);
   function changeMonth(direction: number) {
     const next = new Date(calendarYear, calendarMonth + direction, 1);
     setCalendarYear(next.getFullYear());
@@ -644,6 +806,41 @@ export function PremiumPropertyDetailPro({ property, reviews }: Props) {
             <button type="button" onClick={() => openGallery(0)} className="kule-pro-gallery-open">
               ▦ Tüm fotoğrafları görüntüle
             </button>
+          </div>
+          <div className="kule-pro-hero-reservation-desktop">
+            <ReservationPanel
+          monthLabel={monthLabel}
+          calendarDays={calendarDays}
+          sheetDayMap={sheetDayMap}
+          todayKey={todayKey}
+          checkin={checkin}
+          checkout={checkout}
+          adults={adults}
+          children={children}
+          childAges={childAges}
+          nights={nights}
+          hasDateSelection={hasDateSelection}
+          canReserve={canReserve}
+          stayRuleMessage={stayRuleMessage}
+          withinGuestLimit={withinGuestLimit}
+          totalGuests={totalGuests}
+          baseGuestLimit={baseGuestLimit}
+          extraGuestCount={extraGuestCount}
+          extraGuestDailyFee={extraGuestDailyFee}
+          baseSubtotal={baseSubtotal}
+          extraGuestTotal={extraGuestTotal}
+          selectedRows={selectedRows}
+          subtotal={subtotal}
+          cleaningFee={cleaningFee}
+          total={total}
+          property={property}
+          onPrevMonth={() => changeMonth(-1)}
+          onNextMonth={() => changeMonth(1)}
+          onSelectDate={selectDate}
+          onAdultsChange={setAdults}
+          onChildrenChange={changeChildren}
+          onChildAgeChange={setChildAge}
+        />
           </div>
         </div>
       </section>
@@ -1089,7 +1286,7 @@ function ReservationPanel(props: ReservationPanelProps) {
         </div>
       ) : null}
 
-      <div className="kule-pro-reserve-action">
+      <div className="kule-pro-reserve-action" data-kule-reserve-action>
         <ReserveButton
           disabled={!canReserve}
           payload={{

@@ -1,3 +1,4 @@
+import { KuleSearchHandoff } from "@/components/KuleSearchHandoff";
 import "./globals.css";
 import type { Metadata } from "next";
 
@@ -13,7 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <body>{children}</body>
+      <body>
+        <KuleSearchHandoff />{children}</body>
     </html>
   );
 }

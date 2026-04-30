@@ -718,11 +718,232 @@ function getImageCount(property: Property) {
   return Math.max(1, galleryCount + (property.heroImage ? 1 : 0));
 }
 
+
+function useKuleDirectReservationFromHome() {
+  useEffect(() => {
+    function readDateFromDom(index: number) {
+      const dateInputs = Array.from(
+        document.querySelectorAll<HTMLInputElement>('input[type="date"]')
+      )
+        .map((input) => input.value)
+        .filter(Boolean);
+
+      return dateInputs[index] || "";
+    }
+
+    function readNumberFromDom(names: string[], fallback: string) {
+      const selector = names
+        .map((item) => `input[name*="${item}" i], input[id*="${item}" i]`)
+        .join(",");
+
+      const input = document.querySelector<HTMLInputElement>(selector);
+
+      return input?.value || fallback;
+    }
+
+    function handleClick(event: MouseEvent) {
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest("a") as HTMLAnchorElement | null;
+
+      if (!link) return;
+
+      const url = new URL(link.href, window.location.origin);
+
+      if (url.origin !== window.location.origin) return;
+      if (!url.pathname.startsWith("/properties/")) return;
+
+      const currentParams = new URLSearchParams(window.location.search);
+
+      const checkin =
+        currentParams.get("checkin") ||
+        currentParams.get("checkIn") ||
+        currentParams.get("startDate") ||
+        readDateFromDom(0);
+
+      const checkout =
+        currentParams.get("checkout") ||
+        currentParams.get("checkOut") ||
+        currentParams.get("endDate") ||
+        readDateFromDom(1);
+
+      if (!checkin || !checkout) return;
+
+      const adults =
+        currentParams.get("adults") ||
+        currentParams.get("adult") ||
+        currentParams.get("guests") ||
+        currentParams.get("guestCount") ||
+        readNumberFromDom(["adult", "adults", "guest", "guests", "yetiskin"], "2");
+
+      const children =
+        currentParams.get("children") ||
+        currentParams.get("child") ||
+        currentParams.get("kids") ||
+        readNumberFromDom(["child", "children", "kid", "kids", "cocuk"], "0");
+
+      url.searchParams.set("checkin", checkin);
+      url.searchParams.set("checkout", checkout);
+      url.searchParams.set("adults", adults || "2");
+      url.searchParams.set("children", children || "0");
+      url.searchParams.set("directReservation", "1");
+      url.searchParams.set("fromHomeSearch", "1");
+
+      window.sessionStorage.setItem("kule:directReservation", "1");
+
+      event.preventDefault();
+      window.location.href = url.toString();
+    }
+
+    document.addEventListener("click", handleClick, true);
+
+    return () => {
+      document.removeEventListener("click", handleClick, true);
+    };
+  }, []);
+}
+
+
+function useKuleHomeSearchBridge() {
+  useEffect(() => {
+    const STORAGE_KEY = "kule:lastSearch";
+
+    function getDateInputs() {
+      return Array.from(document.querySelectorAll<HTMLInputElement>('input[type="date"]'))
+        .map((input) => input.value)
+        .filter(Boolean);
+    }
+
+    function findInputValue(words: string[], fallback: string) {
+      const selectors = words
+        .map((word) => [
+          `input[name*="${word}" i]`,
+          `input[id*="${word}" i]`,
+          `select[name*="${word}" i]`,
+          `select[id*="${word}" i]`
+        ].join(","))
+        .join(",");
+
+      const element = document.querySelector<HTMLInputElement | HTMLSelectElement>(selectors);
+
+      return element?.value || fallback;
+    }
+
+    function readSearchFromPage() {
+      const params = new URLSearchParams(window.location.search);
+      const dateInputs = getDateInputs();
+
+      const checkin =
+        params.get("checkin") ||
+        params.get("checkIn") ||
+        params.get("startDate") ||
+        params.get("start") ||
+        dateInputs[0] ||
+        "";
+
+      const checkout =
+        params.get("checkout") ||
+        params.get("checkOut") ||
+        params.get("endDate") ||
+        params.get("end") ||
+        dateInputs[1] ||
+        "";
+
+      const adults =
+        params.get("adults") ||
+        params.get("adult") ||
+        params.get("guests") ||
+        params.get("guestCount") ||
+        findInputValue(["adult", "adults", "guest", "guests", "yetiskin", "kişi", "kisi"], "2");
+
+      const children =
+        params.get("children") ||
+        params.get("child") ||
+        params.get("kids") ||
+        findInputValue(["child", "children", "kids", "cocuk", "çocuk"], "0");
+
+      return {
+        checkin,
+        checkout,
+        adults: adults || "2",
+        children: children || "0"
+      };
+    }
+
+    function saveSearch() {
+      const search = readSearchFromPage();
+
+      if (search.checkin && search.checkout) {
+        window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(search));
+      }
+    }
+
+    function handleAnyChange() {
+      window.setTimeout(saveSearch, 50);
+    }
+
+    function handlePropertyClick(event: MouseEvent) {
+      const target = event.target as HTMLElement | null;
+      const link = target?.closest("a") as HTMLAnchorElement | null;
+
+      if (!link) return;
+
+      const url = new URL(link.href, window.location.origin);
+
+      if (url.origin !== window.location.origin) return;
+      if (!url.pathname.startsWith("/properties/")) return;
+
+      let search = readSearchFromPage();
+
+      if (!search.checkin || !search.checkout) {
+        try {
+          const saved = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) || "{}");
+
+          search = {
+            checkin: search.checkin || saved.checkin || "",
+            checkout: search.checkout || saved.checkout || "",
+            adults: search.adults || saved.adults || "2",
+            children: search.children || saved.children || "0"
+          };
+        } catch {
+          // ignore
+        }
+      }
+
+      if (!search.checkin || !search.checkout) return;
+
+      url.searchParams.set("checkin", search.checkin);
+      url.searchParams.set("checkout", search.checkout);
+      url.searchParams.set("adults", search.adults || "2");
+      url.searchParams.set("children", search.children || "0");
+      url.searchParams.set("directReservation", "1");
+      url.searchParams.set("fromHomeSearch", "1");
+
+      window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(search));
+      window.sessionStorage.setItem("kule:directReservation", "1");
+
+      event.preventDefault();
+      window.location.href = url.toString();
+    }
+
+    document.addEventListener("change", handleAnyChange, true);
+    document.addEventListener("input", handleAnyChange, true);
+    document.addEventListener("click", handlePropertyClick, true);
+
+    return () => {
+      document.removeEventListener("change", handleAnyChange, true);
+      document.removeEventListener("input", handleAnyChange, true);
+      document.removeEventListener("click", handlePropertyClick, true);
+    };
+  }, []);
+}
+
 export function PremiumHomePagePro({
   properties,
   liveMetaMap,
   defaultQuery,
 }: Props) {
+  useKuleHomeSearchBridge();
+  useKuleDirectReservationFromHome();
   const heroProperty =
     properties.find((property) => property.slug === "kule-suit") ??
     properties.find((property) => property.slug === "kule-yesil-ev") ??

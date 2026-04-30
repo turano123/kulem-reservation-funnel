@@ -2779,3 +2779,29 @@ hr.soft {
     align-self: start;
   }
 }
+/* Kule Sapanca - Detay sayfası rezervasyon akışı düzeltmesi */
+.kule-pro-hero-reservation-desktop {
+  width: 100%;
+  max-width: 430px;
+  justify-self: end;
+  align-self: end;
+}
+
+@media (max-width: 900px) {
+  .kule-pro-hero-reservation-desktop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 901px) {
+  .kule-pro-hero-reservation-desktop .kule-pro-reservation-card {
+    max-height: calc(100vh - 140px);
+    overflow: auto;
+  }
+
+  .kule-pro-content-grid > .kule-pro-reservation-card {
+    position: sticky;
+    top: 96px;
+    align-self: start;
+  }
+}
