@@ -1417,8 +1417,24 @@ function GoogleReviewSummary({
   reviews: DisplayReview[];
   url?: string;
 }) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // kule:google-mobile-toggle-state
   return (
-    <section className="kule-pro-card kule-pro-google-summary">
+    <section className={`kule-pro-card kule-pro-google-summary ${mobileOpen ? "is-open" : ""}`}>
+      <button
+        type="button"
+        className="kule-pro-google-mobile-toggle"
+        onClick={() => setMobileOpen((current) => !current)}
+        aria-expanded={mobileOpen}
+      >
+        <span>
+          <GoogleIcon />
+          Google yorumları
+        </span>
+        <strong>{rating.toFixed(1)} ★</strong>
+        <small>{mobileOpen ? "Kapat" : "Göster"}</small>
+      </button>
       <div className="kule-pro-google-grid">
         <div className="kule-pro-google-left">
           <div className="kule-pro-google-logo">

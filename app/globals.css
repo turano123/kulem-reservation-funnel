@@ -2805,3 +2805,145 @@ hr.soft {
     align-self: start;
   }
 }
+/* Kule Sapanca - Mobil premium UX rötuşları */
+.kule-pro-mobile-sticky .kule-pro-mobile-action,
+.kule-pro-mobile-sticky .kule-pro-mobile-action *,
+.kule-pro-mobile-sticky .kule-pro-mobile-action button,
+.kule-pro-mobile-sticky .kule-pro-mobile-action a,
+.kule-pro-mobile-sticky .kule-pro-mobile-scroll-btn {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.kule-pro-mobile-sticky .kule-pro-mobile-action button:disabled,
+.kule-pro-mobile-sticky .kule-pro-mobile-action a[aria-disabled="true"] {
+  opacity: 1 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Google yorumları: desktop tam görünür, mobilde açılır/kapanır */
+.kule-pro-google-mobile-toggle {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .kule-pro-google-summary {
+    padding: 18px !important;
+  }
+
+  .kule-pro-google-mobile-toggle {
+    width: 100%;
+    border: 1px solid rgba(15, 57, 38, 0.12);
+    border-radius: 22px;
+    padding: 14px 14px;
+    background: linear-gradient(135deg, #ffffff, #f7fbf8);
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 12px 34px rgba(0, 0, 0, 0.08);
+  }
+
+  .kule-pro-google-mobile-toggle span {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 900;
+    color: #10261b;
+    font-size: 15px;
+    text-align: left;
+  }
+
+  .kule-pro-google-mobile-toggle strong {
+    color: #0d5f3b;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+
+  .kule-pro-google-mobile-toggle small {
+    border-radius: 999px;
+    padding: 7px 10px;
+    background: rgba(13, 95, 59, 0.1);
+    color: #0d5f3b;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .kule-pro-google-summary:not(.is-open) .kule-pro-google-grid,
+  .kule-pro-google-summary:not(.is-open) .kule-pro-google-link {
+    display: none !important;
+  }
+
+  .kule-pro-google-summary.is-open .kule-pro-google-grid {
+    margin-top: 16px;
+  }
+
+  .kule-pro-google-summary.is-open .kule-pro-google-link {
+    margin-top: 14px;
+  }
+}
+
+/* Ana sayfa mobil güven ikonları ortalama */
+@media (max-width: 900px) {
+  .kule-pro-trust-icon,
+  .kule-pro-google-logo,
+  .kule-pro-avatar,
+  .kule-pro-stat-value span,
+  .kule-pro-reservation-icon,
+  [class*="trustIcon"],
+  [class*="TrustIcon"],
+  [class*="proofIcon"],
+  [class*="ProofIcon"],
+  [class*="featureIcon"],
+  [class*="FeatureIcon"],
+  [class*="benefitIcon"],
+  [class*="BenefitIcon"],
+  [class*="advantageIcon"],
+  [class*="AdvantageIcon"] {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    line-height: 1 !important;
+    flex-shrink: 0 !important;
+  }
+
+  [class*="trustIcon"] svg,
+  [class*="TrustIcon"] svg,
+  [class*="proofIcon"] svg,
+  [class*="ProofIcon"] svg,
+  [class*="featureIcon"] svg,
+  [class*="FeatureIcon"] svg,
+  [class*="benefitIcon"] svg,
+  [class*="BenefitIcon"] svg,
+  [class*="advantageIcon"] svg,
+  [class*="AdvantageIcon"] svg,
+  [class*="trustIcon"] img,
+  [class*="TrustIcon"] img,
+  [class*="proofIcon"] img,
+  [class*="ProofIcon"] img,
+  [class*="featureIcon"] img,
+  [class*="FeatureIcon"] img,
+  [class*="benefitIcon"] img,
+  [class*="BenefitIcon"] img,
+  [class*="advantageIcon"] img,
+  [class*="AdvantageIcon"] img {
+    margin: auto !important;
+    display: block !important;
+  }
+
+  [class*="trustItem"],
+  [class*="TrustItem"],
+  [class*="proofItem"],
+  [class*="ProofItem"],
+  [class*="benefitItem"],
+  [class*="BenefitItem"],
+  [class*="advantageItem"],
+  [class*="AdvantageItem"] {
+    align-items: center !important;
+  }
+}
